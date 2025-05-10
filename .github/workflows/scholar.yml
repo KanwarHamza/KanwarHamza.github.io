@@ -1,20 +1,23 @@
 name: Scholar Sync
 on:
   schedule:
-    - cron: '0 0 1 * *'  # 1st of every month at midnight UTC
-  workflow_dispatch:     # Manual trigger option
+    - cron: '0 0 1 * *'  # Runs monthly
+  workflow_dispatch:
 
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: scholar2markdown/scholar-updater@v1
+
+      - name: Fetch Scholar Data
+        uses: docker://scholar2markdown/scholar-updater:latest
         with:
           id: ${{ secrets.SCHOLAR_ID }}
           out_file: _data/scholar.yml
-          format: jekyll
-      - run: |
+
+      - name: Commit & Push
+        run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add _data/scholar.yml
