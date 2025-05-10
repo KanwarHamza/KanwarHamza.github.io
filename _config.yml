@@ -1,12 +1,9 @@
-title: "Kanwar Hamza"
-baseurl: ""  # Leave empty!
-url: "https://kanwarhamza.github.io"
-theme: minima  # Default Jekyll theme
-# Enable critical plugins
-plugins:
-  - jekyll-redirect-from
-
-# Process these special folders
-include:
-  - _publications
-  - _data
+1| title: "Kanwar Hamza Shuja"
+2| baseurl: ""  # Leave empty!
+3| url: "https://kanwarhamza.github.io"
+4| theme: minima  # Default Jekyll theme
+5| plugins:
+6|   - jekyll-redirect-from  # Enables redirects
+7| include:
+8|   - _publications # Process your publications folder
+9|   - _data
