@@ -1,8 +1,9 @@
-title: "Kanwar Hamza"
+title: "Kanwar Hamza Shuja"
 baseurl: ""  # Leave empty!
 url: "https://kanwarhamza.github.io"
 theme: minima  # Default Jekyll theme
 plugins:
   - jekyll-redirect-from  # Enables redirects
 include:
-  - _publications  # Process your publications folder
+  - _publications # Process your publications folder
+  -_data
