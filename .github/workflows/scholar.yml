@@ -1,20 +1,20 @@
 name: Scholar Publications Sync
 on:
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 1 * *'  # Runs on the 1st of every month at midnight UTC
+    - cron: '0 0 1 * *'  # Monthly update
 
 jobs:
   update_publications:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # This grants the needed push permissions
-    
+      contents: write  # Crucial for push access
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
-          persist-credentials: false  # Important for write access
+          token: ${{ secrets.GITHUB_TOKEN }}  # Essential for write permissions
+          persist-credentials: false
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -24,9 +24,11 @@ jobs:
       - name: Install dependencies
         run: pip install scholarly pyyaml
 
-      - name: Create manual publications backup
-        if: ${{ failure() }}  # Only runs if automated fetch fails
+      - name: Fetch or create publications data
+        env:
+          SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
         run: |
+          # Create manual backup first
           cat > _data/scholar.yml << 'EOF'
           publications:
             - title: "Global stillbirths 1990-2021"
@@ -37,46 +39,34 @@ jobs:
               doi: "10.1016/S0140-6736(24)01925-1"
           EOF
 
-      - name: Fetch Google Scholar data
-        env:
-          SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
-        run: |
+          # Try automated fetch
           python -c "
           from scholarly import scholarly
           import yaml
-          
           try:
-              print('Fetching Google Scholar data...')
               author = scholarly.search_author_id('$SCHOLAR_ID')
               scholarly.fill(author, sections=['publications'])
-              pubs = author['publications'][:10]  # Get first 10 pubs
-              
-              data = {'publications': []}
-              for pub in pubs:
-                  if 'bib' not in pub: continue
-                  bib = pub['bib']
-                  data['publications'].append({
-                      'title': bib.get('title', ''),
-                      'authors': bib.get('author', ''),
-                      'year': bib.get('year', ''),
-                      'venue': bib.get('journal', bib.get('conference', '')),
-                      'url': pub.get('pub_url', ''),
-                      'doi': next((link.split('doi.org/')[1] for link in bib.get('url', '').split() if 'doi.org/' in link), '')
-                  })
-              
+              pubs = author['publications'][:10]
               with open('_data/scholar.yml', 'w') as f:
-                  yaml.dump(data, f)
-              print(f'Successfully saved {len(data["publications"])} publications')
-              
+                  yaml.dump({'publications': [
+                      {
+                          'title': p['bib'].get('title'),
+                          'authors': p['bib'].get('author'),
+                          'year': p['bib'].get('year'),
+                          'venue': p['bib'].get('journal', ''),
+                          'url': p.get('pub_url', ''),
+                          'doi': next((link.split('doi.org/')[1] for link in p['bib'].get('url', '').split() if 'doi.org/' in link), '')
+                      } for p in pubs if 'bib' in p
+                  ]}, f)
           except Exception as e:
-              print(f'Error fetching data: {e}')
-              print('Using manual backup data')
+              print(f'Automated fetch failed, using manual data: {e}')
           "
 
-      - name: Commit and push changes
+      - name: Commit and push
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git add _data/scholar.yml
-          git commit -m "Update publications from Google Scholar [skip ci]" || exit 0
-          git push
+          git commit -m "Update publications [skip ci]" || exit 0
+          git push origin HEAD:main
