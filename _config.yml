@@ -1,9 +1,19 @@
-1| title: "Kanwar Hamza Shuja"
-2| baseurl: ""  # Leave empty!
-3| url: "https://kanwarhamza.github.io"
-4| theme: minima  # Default Jekyll theme
-5| plugins:
-6|   - jekyll-redirect-from  # Enables redirects
-7| include:
-8|   - _publications # Process your publications folder
-9|   - _data
+# Minimal required configuration
+title: "Kanwar Hamza's Academic Portfolio"
+baseurl: "" 
+url: "https://kanwarhamza.github.io" 
+theme: minima
+
+# Critical inclusions
+include:
+  - _publications
+  - _data
+
+# Plugin requirements
+plugins:
+  - jekyll-redirect-from
+  - jekyll-paginate
+
+# Safe defaults
+markdown: kramdown
+repository: KanwarHamza/KanwarHamza.github.io
