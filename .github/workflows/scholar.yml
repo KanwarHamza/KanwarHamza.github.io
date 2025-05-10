@@ -1,53 +1,29 @@
-- name: Fetch Google Scholar Data
-  env:
-    SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
-  run: |
-    python -c "
-    # Simplified and more reliable approach
-    import yaml
-    import requests
-    from bs4 import BeautifulSoup
-    
-    # Manual backup data in case scraping fails
-    MANUAL_ENTRIES = [
-        {
-            'title': 'Global stillbirths 1990–2021',
-            'authors': 'GBD Collaborators (incl. Shuja KH)',
-            'year': '2024',
-            'venue': 'The Lancet',
-            'url': 'https://scholar.google.com/citations?view_op=view_citation&citation_for_view=ZfCrk2IAAAAJ:u-x6o8ySG0sC',
-            'doi': '10.1016/S0140-6736(24)01925-1'
-        }
-    ]
-    
-    try:
-        # Try automated scraping (may fail)
-        print('Attempting automated fetch...')
-        from scholarly import scholarly
-        author = scholarly.search_author_id('$SCHOLAR_ID')
-        scholarly.fill(author, sections=['publications'])
-        pubs = author['publications'][:10]  # Only get 10 to avoid rate limits
+name: Scholar Sync
+on:
+  workflow_dispatch:  # Manual trigger only (more reliable)
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         
-        data = {
-            'publications': [
-                {
-                    'title': pub['bib'].get('title', ''),
-                    'authors': pub['bib'].get('author', ''),
-                    'year': pub['bib'].get('year', ''),
-                    'venue': pub['bib'].get('journal', ''),
-                    'url': pub.get('pub_url', ''),
-                    'doi': next((link.split('doi.org/')[1] for link in pub['bib'].get('url', '').split() if 'doi.org/' in link), '')
-                } for pub in pubs if pub.get('bib')
-            ]
-        }
-        print(f'Successfully fetched {len(data["publications"])} publications')
-    
-    except Exception as e:
-        print(f'Automated fetch failed: {e}')
-        print('Using manual backup data')
-        data = {'publications': MANUAL_ENTRIES}
-    
-    # Always write the file
-    with open('_data/scholar.yml', 'w') as f:
-        yaml.dump(data, f)
-    "
+      - name: Manual Scholar Backup
+        run: |
+          cat > _data/scholar.yml << 'EOF'
+          publications:
+            - title: "Global stillbirths 1990–2021"
+              authors: "GBD Collaborators (incl. Shuja KH)"
+              year: "2024"
+              venue: "The Lancet"
+              url: "https://scholar.google.com/citations?view_op=view_citation&citation_for_view=ZfCrk2IAAAAJ:u-x6o8ySG0sC"
+              doi: "10.1016/S0140-6736(24)01925-1"
+          EOF
+          
+      - name: Commit
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add _data/scholar.yml
+          git commit -m "Manual scholar update [skip ci]" || exit 0
+          git push
