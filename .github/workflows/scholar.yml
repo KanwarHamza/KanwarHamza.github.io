@@ -1,0 +1,22 @@
+name: Scholar Sync
+on:
+  schedule:
+    - cron: '0 0 1 * *'  # 1st of every month at midnight UTC
+  workflow_dispatch:     # Manual trigger option
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: scholar2markdown/scholar-updater@v1
+        with:
+          id: ${{ secrets.SCHOLAR_ID }}
+          out_file: _data/scholar.yml
+          format: jekyll
+      - run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add _data/scholar.yml
+          git commit -m "Auto: Update Scholar pubs [skip ci]" || exit 0
+          git push
