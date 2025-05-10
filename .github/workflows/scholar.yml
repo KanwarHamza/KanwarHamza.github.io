@@ -1,29 +1,82 @@
-name: Scholar Sync
+name: Scholar Publications Sync
 on:
-  workflow_dispatch:  # Manual trigger only (more reliable)
+  workflow_dispatch:  # Allows manual triggering
+  schedule:
+    - cron: '0 0 1 * *'  # Runs on the 1st of every month at midnight UTC
 
 jobs:
-  update:
+  update_publications:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # This grants the needed push permissions
+    
     steps:
-      - uses: actions/checkout@v4
-        
-      - name: Manual Scholar Backup
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # Important for write access
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install scholarly pyyaml
+
+      - name: Create manual publications backup
+        if: ${{ failure() }}  # Only runs if automated fetch fails
         run: |
           cat > _data/scholar.yml << 'EOF'
           publications:
-            - title: "Global stillbirths 1990–2021"
+            - title: "Global stillbirths 1990-2021"
               authors: "GBD Collaborators (incl. Shuja KH)"
               year: "2024"
               venue: "The Lancet"
               url: "https://scholar.google.com/citations?view_op=view_citation&citation_for_view=ZfCrk2IAAAAJ:u-x6o8ySG0sC"
               doi: "10.1016/S0140-6736(24)01925-1"
           EOF
+
+      - name: Fetch Google Scholar data
+        env:
+          SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
+        run: |
+          python -c "
+          from scholarly import scholarly
+          import yaml
           
-      - name: Commit
+          try:
+              print('Fetching Google Scholar data...')
+              author = scholarly.search_author_id('$SCHOLAR_ID')
+              scholarly.fill(author, sections=['publications'])
+              pubs = author['publications'][:10]  # Get first 10 pubs
+              
+              data = {'publications': []}
+              for pub in pubs:
+                  if 'bib' not in pub: continue
+                  bib = pub['bib']
+                  data['publications'].append({
+                      'title': bib.get('title', ''),
+                      'authors': bib.get('author', ''),
+                      'year': bib.get('year', ''),
+                      'venue': bib.get('journal', bib.get('conference', '')),
+                      'url': pub.get('pub_url', ''),
+                      'doi': next((link.split('doi.org/')[1] for link in bib.get('url', '').split() if 'doi.org/' in link), '')
+                  })
+              
+              with open('_data/scholar.yml', 'w') as f:
+                  yaml.dump(data, f)
+              print(f'Successfully saved {len(data["publications"])} publications')
+              
+          except Exception as e:
+              print(f'Error fetching data: {e}')
+              print('Using manual backup data')
+          "
+
+      - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add _data/scholar.yml
-          git commit -m "Manual scholar update [skip ci]" || exit 0
+          git commit -m "Update publications from Google Scholar [skip ci]" || exit 0
           git push
