@@ -10,11 +10,45 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Fetch Scholar Data
-        uses: docker://scholar2markdown/scholar-updater:latest
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          id: ${{ secrets.SCHOLAR_ID }}
-          out_file: _data/scholar.yml
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install scholarly pyyaml
+
+      - name: Fetch Google Scholar Data
+        env:
+          SCHOLAR_ID: ${{ secrets.SCHOLAR_ID }}
+        run: |
+          python -c "
+          from scholarly import scholarly
+          import yaml
+          
+          print('Fetching profile...')
+          author = scholarly.search_author_id('$SCHOLAR_ID')
+          scholarly.fill(author, sections=['publications'])
+          pubs = author['publications'][:25]  # Limit to 25 most recent
+          
+          print(f'Found {len(pubs)} publications')
+          data = {'publications': []}
+          
+          for pub in pubs:
+              bib = pub.get('bib', {})
+              data['publications'].append({
+                  'title': bib.get('title', ''),
+                  'authors': bib.get('author', ''),
+                  'year': bib.get('year', ''),
+                  'venue': bib.get('journal', bib.get('conference', '')),
+                  'url': pub.get('pub_url', ''),
+                  'doi': next((link.split('doi.org/')[1] for link in bib.get('url', '').split() if 'doi.org/' in link), '')
+              })
+          
+          with open('_data/scholar.yml', 'w') as f:
+              yaml.dump(data, f)
+          "
 
       - name: Commit & Push
         run: |
