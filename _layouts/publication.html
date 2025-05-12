@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>{{ page.title }}</title>
+</head>
+<body>
+  <article>
+    <h1>{{ page.title }}</h1>
+    <p><strong>Authors:</strong> {{ page.authors }}</p>
+    <p><strong>Year:</strong> {{ page.year }}</p>
+    <p><strong>Venue:</strong> {{ page.venue }}</p>
+    <p><a href="{{ page.url }}">Link to Publication</a></p>
+    <p><a href="https://doi.org/{{ page.doi }}">DOI</a></p>
+  </article>
+</body>
+</html>
