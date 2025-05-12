@@ -1,4 +1,4 @@
 collections:
   publications:
     output: true
-    permalink: /publications/:collection/:name/
+    permalink: /publications/:name/
