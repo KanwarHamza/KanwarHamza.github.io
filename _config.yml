@@ -1,19 +1,4 @@
-# Minimal required configuration
-title: "Kanwar Hamza's Academic Portfolio"
-baseurl: "" 
-url: "https://kanwarhamza.github.io" 
-theme: minima
-
-# Critical inclusions
-include:
-  - _publications
-  - _data
-
-# Plugin requirements
-plugins:
-  - jekyll-redirect-from
-  - jekyll-paginate
-
-# Safe defaults
-markdown: kramdown
-repository: KanwarHamza/KanwarHamza.github.io
+collections:
+  publications:
+    output: true
+    permalink: /publications/:path/
