@@ -1,2 +1,2 @@
 # Kanwar Hamza's Academic Portfolio
-Automated systematic review tools and machine learning research.
+These are lists of my publications.
