@@ -1,14 +1,42 @@
 ---
 layout: default
 title: Publications
-permalink: /publications/
 ---
 
+# Publications
+
+## Impact Factor Journals
+
 {% for publication in site.publications %}
-  <h2>{{ publication.title }}</h2>
-  <p><strong>Authors:</strong> {{ publication.authors }}</p>
-  <p><strong>Year:</strong> {{ publication.year }}</p>
-  <p><strong>Venue:</strong> {{ publication.venue }}</p>
-  <p><a href="{{ publication.url }}">Link to Publication</a></p>
-  <p><strong>DOI:</strong> <a href="https://doi.org/{{ publication.doi }}">{{ publication.doi }}</a></p>
+  {% if publication.category == "impact_factor" %}
+    - [{{ publication.title }}]({{ publication.url }})
+      - Authors: {{ publication.authors }}
+      - Journal: {{ publication.journal }}
+      - Year: {{ publication.year }}
+      - DOI: [{{ publication.doi }}](https://doi.org/{{ publication.doi }})
+  {% endif %}
+{% endfor %}
+
+## Non-Impact Factor Journals
+
+{% for publication in site.publications %}
+  {% if publication.category == "non_impact_factor" %}
+    - [{{ publication.title }}]({{ publication.url }})
+      - Authors: {{ publication.authors }}
+      - Journal: {{ publication.journal }}
+      - Year: {{ publication.year }}
+      - DOI: [{{ publication.doi }}](https://doi.org/{{ publication.doi }})
+  {% endif %}
+{% endfor %}
+
+## Book Chapters
+
+{% for publication in site.publications %}
+  {% if publication.category == "book_chapter" %}
+    - [{{ publication.title }}]({{ publication.url }})
+      - Authors: {{ publication.authors }}
+      - Journal: {{ publication.journal }}
+      - Year: {{ publication.year }}
+      - DOI: [{{ publication.doi }}](https://doi.org/{{ publication.doi }})
+  {% endif %}
 {% endfor %}
