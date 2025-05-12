@@ -2,10 +2,16 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>{{ page.title | default: "Kanwar Hamza" }}</title>
-  <!-- Your other meta tags here -->
+  <title>{{ page.title }}</title>
 </head>
 <body>
-  {{ content }}
+  <article>
+    <h1>{{ page.title }}</h1>
+    <p><strong>Authors:</strong> {{ page.authors }}</p>
+    <p><strong>Year:</strong> {{ page.year }}</p>
+    <p><strong>Venue:</strong> {{ page.venue }}</p>
+    <p><a href="{{ page.url }}">Link to Publication</a></p>
+    <p><a href="https://doi.org/{{ page.doi }}">DOI</a></p>
+  </article>
 </body>
 </html>
