@@ -1,6 +1,3 @@
-header_pages:
-  - publications.md
-  
 collections:
   publications:
     output: true
